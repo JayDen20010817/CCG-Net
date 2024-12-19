@@ -1,6 +1,6 @@
 # 🤣👉CCG-Net👈
 <p align="center">
-<img src="introduction.png" width="450 height="450">
+<img src="introduction.png" width="400 height="400">
 </p>
 
 ## 🔥Overview
