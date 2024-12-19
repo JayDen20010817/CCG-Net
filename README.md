@@ -3,12 +3,12 @@
 <img src="introduction.png" width="450 height="450">
 </p>
 
-## 🔥 Overview
+## 🔥Overview
 <p align="center">
   <img src="framework.png" width="900 height="900"
 </p>
 
-## 📣Datasets:
+## 📣Quick start:
 - Place the text, audio, and video feature files in the format as described above in the following manner in the 'Data' folder:
 WITS Dataset_link：https://github.com/LCS2-IIITD/MAF <br />
   - Data
