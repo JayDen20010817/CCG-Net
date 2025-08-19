@@ -121,6 +121,65 @@ from transformers.modeling_outputs import (
 )
 from transformer_encoder import TransformerEncoder
 
+class SubSpace(nn.Module):
+    
+    """
+    Subspace class.
+    ...
+    Attributes
+    ----------
+    nin : int
+        number of input feature volume.
+    Methods
+    -------
+    __init__(nin)
+        initialize method.
+    forward(x)
+        forward pass.
+    """
+
+    def __init__(self, nin):
+        super(SubSpace, self).__init__()
+        device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
+        self.conv_dws = nn.Conv2d(
+            nin, nin, kernel_size=1, stride=1, padding=0, groups=nin
+        ).to(device)
+        self.bn_dws = nn.BatchNorm2d(nin, momentum=0.9).to(device)
+        self.relu_dws = nn.ReLU(inplace=False).to(device)
+
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=1, padding=1).to(device)
+
+        self.conv_point = nn.Conv2d(
+            nin, 1, kernel_size=1, stride=1, padding=0, groups=1
+        ).to(device)
+        self.bn_point = nn.BatchNorm2d(1, momentum=0.9).to(device)
+        self.relu_point = nn.ReLU(inplace=False).to(device)
+
+        self.softmax = nn.Softmax(dim=2).to(device)
+
+    def forward(self, x):
+        out = self.conv_dws(x)
+        out = self.bn_dws(out)
+        out = self.relu_dws(out)
+
+        out = self.maxpool(out)
+
+        out = self.conv_point(out)
+        out = self.bn_point(out)
+        out = self.relu_point(out)
+
+        m, n, p, q = out.shape
+        out = self.softmax(out.view(m, n, -1))
+        out = out.view(m, n, p, q)
+
+        out = out.expand(x.shape[0], x.shape[1], x.shape[2], x.shape[3])
+
+        out = torch.mul(out, x)
+
+        out = out + x
+
+        return out   
+
 # ---------------------------------------------- Dynamic Context Guiding-Broadcasting (DCGB) ----------------------------------------------
 class Context_Self_embedding_Attention(nn.Module):
 
@@ -169,6 +228,7 @@ class Context_Self_embedding_Attention(nn.Module):
                                                    key=k_cap,
                                                    value=v_cap)
         return attention_output
+                    
 
 # ---------------------------------------------- Modal Interaction ----------------------------------------------
 
@@ -265,7 +325,7 @@ class MIF(nn.Module):
                                        weight_v * output_v)
 
         return output
-    
+
 # ---------------------------------------------- Multimodal BartEncoder ----------------------------------------------
 
 class MultimodalBartEncoder(BartPretrainedModel):
